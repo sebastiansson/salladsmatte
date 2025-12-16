@@ -11,7 +11,7 @@ import { useMemo } from "react";
 function AppContent() {
   // Preload all ingredient images in batches
   const imageUrls = useMemo(() => ingredients.map((i) => i.imageUrl), []);
-  const { progress, isComplete, loaded, failed } = useImagePreloadBatched(
+  const { progress, isComplete, loaded } = useImagePreloadBatched(
     imageUrls,
     12
   );
