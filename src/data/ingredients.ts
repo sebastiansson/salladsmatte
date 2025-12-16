@@ -1,0 +1,1261 @@
+import type { Ingredient } from "@/types";
+
+// Correct timestamps from Picadeli CDN (scraped from their website)
+const IMAGE_TIMESTAMPS: Record<string, string> = {
+  // Bases
+  "10678": "1692869824", // Isbergssallad
+  "10686": "1692869827", // Familjesallad
+  "10677": "1692869821", // Napolisallad
+  "12497": "1692870343", // Grönkålssallad
+  "11862": "1747101676", // Krispig svartkålssallad
+
+  // Grains & Carbs
+  "13585": "1743044474", // Rismix
+  "12200": "1692870318", // Svart Quinoa & Linssallad
+  "10595": "1692869812", // Pastasallad Krämig Chili
+  "10596": "1692869813", // Pastasallad Pesto
+  "11279": "1692869862", // Pasta Bruschetta
+  "12204": "1692870318", // Blomkålsris med Citronsmak
+  "13216": "1724378518", // Couscous Marocko Style
+  "13653": "1756778478", // Pad Thai Nudlar
+  "11089": "1692869848", // Nudelsallad Wok
+  "13215": "1692870388", // Tomat, Spenat & Pestopasta
+  "10627": "1692869815", // Örtkryddad Trivilini
+  "11543": "1747101675", // Krämig Currypasta
+  "12205": "1692870321", // Libanesisk Quinoasallad
+
+  // Proteins
+  "11404": "1692869863", // Salladskyckling Tärnad
+  "11650": "1692870301", // Skivad Kyckling
+  "11867": "1692870308", // Kycklingspett Sweet Chili
+  "11702": "1692870304", // Tacokyckling Strimlad
+  "10666": "1692869817", // Räkor
+  "11869": "1692870308", // Varmrökt Lax
+  "12053": "1692870313", // Tonfiskbitar i Solrosolja
+  "10705": "1692869832", // Falafel
+  "12255": "1692870324", // Teriyaki Veg. Strips
+  "13143": "1692870386", // Kokta Skalade Ägg
+  "12736": "1692870369", // Kalkonskinka
+  "11703": "1692870306", // Salladskyckling
+  "12049": "1692870312", // Kycklingköttbulle
+  "13502": "1723255276", // Kycklingnuggets
+  "10657": "1692869817", // Surimi
+  "12022": "1692870311", // Veg. Chili Ginger Strips
+  "13588": "1743044475", // Vegetariska Taco Strips
+  "13120": "1692870383", // BBQ Bites Ovo Veg.
+  "12867": "1743559273", // Grön & Vit Kikärtsmix
+  "13121": "1692870384", // Krämig Tonfiskröra
+
+  // Vegetables
+  "10857": "1692869843", // Tärnad Gurka
+  "11159": "1692869854", // Skivad Gurka
+  "10681": "1692869825", // Cocktailtomat
+  "10668": "1692869818", // Broccoli
+  "12474": "1692870340", // Blomkål
+  "10675": "1692869821", // Morot Julienne
+  "10708": "1692869833", // Majs
+  "10816": "1692869841", // Pico de Gallo
+  "10791": "1692869837", // Avokado
+  "11078": "1692869846", // Skivad Rödlök
+  "10838": "1692869841", // Marinerade Sojabönor
+  "10672": "1692869819", // Paprikamix
+  "12184": "1692870315", // White Cabbage Slaw
+  "10601": "1692869815", // Coleslaw
+  "12328": "1692870334", // Morot & Röd Spetskål
+  "11152": "1734058912", // Råkost Regnbågssallad
+  "13591": "1743044476", // Broccoli & Sojabönmix
+  "13656": "1756778479", // Chilipicklade Grönsaker
+  "13675": "1756778481", // Picklad Rödlök
+  "13487": "1723255273", // Kålsallad Kimchi Style
+  "13123": "1692870385", // Greek-ish Salad
+  "13489": "1723255274", // Sötpotatisröra
+  "13220": "1692870392", // Grönkålstabbouleh
+  "13654": "1756778479", // Bönmix Asian Style
+
+  // Cheese
+  "10699": "1692869829", // Tärnad Gouda
+  "10839": "1692869843", // Mozzarellaost
+  "10704": "1692869830", // Krämig Salladsost
+  "12973": "1756778477", // Cottage Cheese
+
+  // Fruits
+  "10711": "1692869835", // Mangobitar
+  "13227": "1692870393", // Vattenmelon
+  "11110": "1692869852", // Melonmix
+  "10709": "1692869834", // Ananasbitar
+
+  // Toppings
+  "11647": "1692870299", // Salladschips
+  "13115": "1692870377", // Krutong Naturell
+  "13114": "1692870374", // Krutong Vitlök Persilja
+  "11643": "1692870296", // Topping Gojibär (using 11644's timestamp)
+  "11644": "1692870296", // Topping Aprikos
+  "11141": "1692869852", // Örtmarinerade Oliver
+  "10805": "1692869839", // Cornichons
+  "11211": "1692869859", // Rostad Lök
+  "11645": "1692870298", // Topping Rostad Sojaböna
+  "11016": "1692869845", // Soltorkade Tomater
+  "11870": "1692870310", // Golden Cornball
+  "12257": "1692870325", // Saltrostad Majs
+
+  // Dressings
+  "12715": "1692870362", // Örtvinägrett (Rhode Island style)
+  "12714": "1692870360", // Vitlöksdressing
+  "12716": "1692870363", // Sriracha Mayo
+  "12713": "1692870359", // Mangocurrydressing
+  "12502": "1692870348", // Tzatziki
+  "13218": "1692870391", // Jalapeño Ranch Dressing
+  "12711": "1692870357", // Caesardressing
+  "12712": "1692870357", // Rhode Islanddressing
+  "12503": "1692870348", // Skagenröra Fraiche
+  "13587": "1743044475", // Balsamico Vinägrett
+  "13660": "1756778480", // Kebabdressing
+};
+
+// Image URL pattern: https://www.picadeli.se/sites/default/files/styles/scale_1440/public/product_img/[ID]-[timestamp].png
+const getImageUrl = (id: string, fallbackTimestamp: string = "1692869843") => {
+  const timestamp = IMAGE_TIMESTAMPS[id] || fallbackTimestamp;
+  return `https://www.picadeli.se/sites/default/files/styles/scale_1440/public/product_img/${id}-${timestamp}.png`;
+};
+
+export const ingredients: Ingredient[] = [
+  // ===== BASES =====
+  {
+    id: "10678",
+    name: "Isbergssallad",
+    slogan: "CRISPY CLASSIC",
+    category: "bases",
+    imageUrl: getImageUrl("10678"),
+    nutritionPer100g: {
+      energyKj: 54,
+      energyKcal: 13,
+      fat: 0.1,
+      saturatedFat: 0,
+      carbohydrates: 1.8,
+      sugars: 1.4,
+      protein: 0.9,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10686",
+    name: "Familjesallad",
+    slogan: "MIX IT UP",
+    category: "bases",
+    imageUrl: getImageUrl("10686"),
+    nutritionPer100g: {
+      energyKj: 67,
+      energyKcal: 16,
+      fat: 0.2,
+      saturatedFat: 0,
+      carbohydrates: 2.1,
+      sugars: 1.6,
+      protein: 1.2,
+      salt: 0.02,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10677",
+    name: "Napolisallad",
+    slogan: "ALL MIXED UP",
+    category: "bases",
+    imageUrl: getImageUrl("10677"),
+    nutritionPer100g: {
+      energyKj: 96,
+      energyKcal: 23,
+      fat: 0.5,
+      saturatedFat: 0.1,
+      carbohydrates: 1.0,
+      sugars: 0.5,
+      protein: 3.1,
+      salt: 0.24,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12497",
+    name: "Grönkålssallad",
+    slogan: "KALE YEAH",
+    category: "bases",
+    imageUrl: getImageUrl("12497"),
+    nutritionPer100g: {
+      energyKj: 155,
+      energyKcal: 37,
+      fat: 0.9,
+      saturatedFat: 0.1,
+      carbohydrates: 4.4,
+      sugars: 1.3,
+      protein: 2.9,
+      salt: 0.04,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "11862",
+    name: "Krispig Svartkålssallad",
+    slogan: "DARK MAGIC",
+    category: "bases",
+    imageUrl: getImageUrl("11862"),
+    nutritionPer100g: {
+      energyKj: 180,
+      energyKcal: 43,
+      fat: 1.2,
+      saturatedFat: 0.2,
+      carbohydrates: 5.0,
+      sugars: 1.8,
+      protein: 3.2,
+      salt: 0.05,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+
+  // ===== GRAINS & CARBS =====
+  {
+    id: "13585",
+    name: "Rismix",
+    slogan: "RICE TO MEET YOU",
+    category: "grains",
+    imageUrl: getImageUrl("13585"),
+    nutritionPer100g: {
+      energyKj: 540,
+      energyKcal: 128,
+      fat: 1.2,
+      saturatedFat: 0.2,
+      carbohydrates: 25,
+      sugars: 0.5,
+      protein: 3.2,
+      salt: 0.4,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "12200",
+    name: "Svart Quinoa & Linssallad",
+    slogan: "ALL ABOUT THAT BASE",
+    category: "grains",
+    imageUrl: getImageUrl("12200"),
+    nutritionPer100g: {
+      energyKj: 744,
+      energyKcal: 176,
+      fat: 2,
+      saturatedFat: 0.2,
+      carbohydrates: 34.2,
+      sugars: 0.4,
+      protein: 5.2,
+      salt: 1.1,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "10595",
+    name: "Pastasallad Krämig Chili",
+    slogan: "CHILLY CHILI",
+    category: "grains",
+    imageUrl: getImageUrl("10595"),
+    nutritionPer100g: {
+      energyKj: 946,
+      energyKcal: 227,
+      fat: 13.3,
+      saturatedFat: 2,
+      carbohydrates: 23.6,
+      sugars: 5.8,
+      protein: 3.1,
+      salt: 1.2,
+    },
+    nutriScore: "B",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "10596",
+    name: "Pastasallad Pesto",
+    slogan: "PESTO MANIFESTO",
+    category: "grains",
+    imageUrl: getImageUrl("10596"),
+    nutritionPer100g: {
+      energyKj: 830,
+      energyKcal: 198,
+      fat: 11,
+      saturatedFat: 1.5,
+      carbohydrates: 19,
+      sugars: 1.5,
+      protein: 4.5,
+      salt: 0.7,
+    },
+    nutriScore: "B",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "11279",
+    name: "Pasta Bruschetta",
+    slogan: "CIAO BELLA",
+    category: "grains",
+    imageUrl: getImageUrl("11279"),
+    nutritionPer100g: {
+      energyKj: 680,
+      energyKcal: 162,
+      fat: 6.5,
+      saturatedFat: 0.9,
+      carbohydrates: 21,
+      sugars: 3.2,
+      protein: 4.2,
+      salt: 0.8,
+    },
+    nutriScore: "B",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "12204",
+    name: "Blomkålsris med Citronsmak",
+    slogan: "CAUL IT RICE",
+    category: "grains",
+    imageUrl: getImageUrl("12204"),
+    nutritionPer100g: {
+      energyKj: 130,
+      energyKcal: 31,
+      fat: 1.5,
+      saturatedFat: 0.2,
+      carbohydrates: 2.5,
+      sugars: 1.8,
+      protein: 1.8,
+      salt: 0.5,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "13216",
+    name: "Couscous Marocko Style",
+    slogan: "MOROCCAN MAGIC",
+    category: "grains",
+    imageUrl: getImageUrl("13216"),
+    nutritionPer100g: {
+      energyKj: 620,
+      energyKcal: 147,
+      fat: 3.8,
+      saturatedFat: 0.5,
+      carbohydrates: 23,
+      sugars: 2.5,
+      protein: 4.5,
+      salt: 0.7,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "13653",
+    name: "Pad Thai Nudlar",
+    slogan: "THAI ME UP",
+    category: "grains",
+    imageUrl: getImageUrl("13653"),
+    nutritionPer100g: {
+      energyKj: 710,
+      energyKcal: 169,
+      fat: 5.2,
+      saturatedFat: 0.8,
+      carbohydrates: 26,
+      sugars: 4.5,
+      protein: 3.8,
+      salt: 1.1,
+    },
+    nutriScore: "B",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "11089",
+    name: "Nudelsallad Wok",
+    slogan: "WOK THIS WAY",
+    category: "grains",
+    imageUrl: getImageUrl("11089"),
+    nutritionPer100g: {
+      energyKj: 650,
+      energyKcal: 155,
+      fat: 4.8,
+      saturatedFat: 0.7,
+      carbohydrates: 24,
+      sugars: 3.2,
+      protein: 3.5,
+      salt: 0.9,
+    },
+    nutriScore: "B",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+
+  // ===== PROTEINS =====
+  {
+    id: "11404",
+    name: "Salladskyckling Tärnad",
+    slogan: "CHICKABIDDY BITES",
+    category: "proteins",
+    imageUrl: getImageUrl("11404"),
+    nutritionPer100g: {
+      energyKj: 451,
+      energyKcal: 107,
+      fat: 1.6,
+      saturatedFat: 0.5,
+      carbohydrates: 2.6,
+      sugars: 0.8,
+      protein: 20,
+      salt: 1.3,
+    },
+    nutriScore: "A",
+    climateFoodprint: 3.6,
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: true,
+  },
+  {
+    id: "11650",
+    name: "Skivad Kyckling",
+    slogan: "CHICK SLICES",
+    category: "proteins",
+    imageUrl: getImageUrl("11650"),
+    nutritionPer100g: {
+      energyKj: 480,
+      energyKcal: 114,
+      fat: 2.0,
+      saturatedFat: 0.6,
+      carbohydrates: 2.0,
+      sugars: 0.5,
+      protein: 22,
+      salt: 1.2,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: true,
+  },
+  {
+    id: "11867",
+    name: "Kycklingspett Sweet Chili",
+    slogan: "CHIC N' CHILI",
+    category: "proteins",
+    imageUrl: getImageUrl("11867"),
+    nutritionPer100g: {
+      energyKj: 520,
+      energyKcal: 124,
+      fat: 2.8,
+      saturatedFat: 0.7,
+      carbohydrates: 6.5,
+      sugars: 5.2,
+      protein: 18,
+      salt: 1.4,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: true,
+  },
+  {
+    id: "11702",
+    name: "Tacokyckling Strimlad",
+    slogan: "TACO BOUT TASTY",
+    category: "proteins",
+    imageUrl: getImageUrl("11702"),
+    nutritionPer100g: {
+      energyKj: 510,
+      energyKcal: 121,
+      fat: 3.2,
+      saturatedFat: 0.8,
+      carbohydrates: 4.5,
+      sugars: 2.0,
+      protein: 19,
+      salt: 1.5,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: true,
+  },
+  {
+    id: "10666",
+    name: "Räkor",
+    slogan: "SHRIMPLY THE BEST",
+    category: "proteins",
+    imageUrl: getImageUrl("10666"),
+    nutritionPer100g: {
+      energyKj: 380,
+      energyKcal: 90,
+      fat: 0.8,
+      saturatedFat: 0.2,
+      carbohydrates: 0.5,
+      sugars: 0,
+      protein: 20,
+      salt: 1.8,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: false,
+  },
+  {
+    id: "11869",
+    name: "Varmrökt Lax",
+    slogan: "SMOKIN HOT",
+    category: "proteins",
+    imageUrl: getImageUrl("11869"),
+    nutritionPer100g: {
+      energyKj: 850,
+      energyKcal: 203,
+      fat: 12,
+      saturatedFat: 2.5,
+      carbohydrates: 0.5,
+      sugars: 0.5,
+      protein: 23,
+      salt: 2.0,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: true,
+  },
+  {
+    id: "12053",
+    name: "Tonfiskbitar i Solrosolja",
+    slogan: "TUNA PERFECTION",
+    category: "proteins",
+    imageUrl: getImageUrl("12053"),
+    nutritionPer100g: {
+      energyKj: 720,
+      energyKcal: 172,
+      fat: 8.5,
+      saturatedFat: 1.2,
+      carbohydrates: 0,
+      sugars: 0,
+      protein: 24,
+      salt: 0.8,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: false,
+  },
+  {
+    id: "10705",
+    name: "Falafel",
+    slogan: "FEELING FALAFEL",
+    category: "proteins",
+    imageUrl: getImageUrl("10705"),
+    nutritionPer100g: {
+      energyKj: 920,
+      energyKcal: 220,
+      fat: 12,
+      saturatedFat: 1.2,
+      carbohydrates: 18,
+      sugars: 2.5,
+      protein: 8.5,
+      salt: 1.2,
+    },
+    nutriScore: "B",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "12255",
+    name: "Teriyaki Veg. Strips",
+    slogan: "TERIYUMMY",
+    category: "proteins",
+    imageUrl: getImageUrl("12255"),
+    nutritionPer100g: {
+      energyKj: 680,
+      energyKcal: 162,
+      fat: 7.5,
+      saturatedFat: 1.0,
+      carbohydrates: 12,
+      sugars: 8.0,
+      protein: 12,
+      salt: 1.8,
+    },
+    nutriScore: "B",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "13143",
+    name: "Kokta Skalade Ägg",
+    slogan: "EGGCELLENT",
+    category: "proteins",
+    imageUrl: getImageUrl("13143"),
+    nutritionPer100g: {
+      energyKj: 620,
+      energyKcal: 148,
+      fat: 10,
+      saturatedFat: 3.0,
+      carbohydrates: 0.8,
+      sugars: 0.5,
+      protein: 13,
+      salt: 0.4,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "12736",
+    name: "Kalkonskinka",
+    slogan: "TURKEY TIME",
+    category: "proteins",
+    imageUrl: getImageUrl("12736"),
+    nutritionPer100g: {
+      energyKj: 420,
+      energyKcal: 100,
+      fat: 2.5,
+      saturatedFat: 0.8,
+      carbohydrates: 1.5,
+      sugars: 1.0,
+      protein: 18,
+      salt: 1.8,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: false,
+    isWarmish: false,
+  },
+
+  // ===== VEGETABLES =====
+  {
+    id: "10857",
+    name: "Tärnad Gurka",
+    slogan: "96 % WATER",
+    category: "vegetables",
+    imageUrl: getImageUrl("10857"),
+    nutritionPer100g: {
+      energyKj: 50,
+      energyKcal: 12,
+      fat: 0.1,
+      saturatedFat: 0,
+      carbohydrates: 1.8,
+      sugars: 1.5,
+      protein: 0.6,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "11159",
+    name: "Skivad Gurka",
+    slogan: "96% WATER",
+    category: "vegetables",
+    imageUrl: getImageUrl("11159"),
+    nutritionPer100g: {
+      energyKj: 50,
+      energyKcal: 12,
+      fat: 0.1,
+      saturatedFat: 0,
+      carbohydrates: 1.8,
+      sugars: 1.5,
+      protein: 0.6,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10681",
+    name: "Cocktailtomat",
+    slogan: "TINY BUT MIGHTY",
+    category: "vegetables",
+    imageUrl: getImageUrl("10681"),
+    nutritionPer100g: {
+      energyKj: 75,
+      energyKcal: 18,
+      fat: 0.2,
+      saturatedFat: 0,
+      carbohydrates: 2.8,
+      sugars: 2.6,
+      protein: 0.9,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10668",
+    name: "Broccoli",
+    slogan: "COOL BROCCOOLI",
+    category: "vegetables",
+    imageUrl: getImageUrl("10668"),
+    nutritionPer100g: {
+      energyKj: 140,
+      energyKcal: 33,
+      fat: 0.4,
+      saturatedFat: 0.1,
+      carbohydrates: 4.0,
+      sugars: 1.5,
+      protein: 3.0,
+      salt: 0.04,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "12474",
+    name: "Blomkål",
+    slogan: "CAULIFLOWER POWER",
+    category: "vegetables",
+    imageUrl: getImageUrl("12474"),
+    nutritionPer100g: {
+      energyKj: 100,
+      energyKcal: 24,
+      fat: 0.3,
+      saturatedFat: 0.1,
+      carbohydrates: 3.0,
+      sugars: 1.8,
+      protein: 2.0,
+      salt: 0.03,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "10675",
+    name: "Morot Julienne",
+    slogan: "CARRY ON CARROT",
+    category: "vegetables",
+    imageUrl: getImageUrl("10675"),
+    nutritionPer100g: {
+      energyKj: 170,
+      energyKcal: 40,
+      fat: 0.2,
+      saturatedFat: 0,
+      carbohydrates: 7.5,
+      sugars: 5.8,
+      protein: 0.9,
+      salt: 0.08,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10708",
+    name: "Majs",
+    slogan: "CORN TO BE WILD",
+    category: "vegetables",
+    imageUrl: getImageUrl("10708"),
+    nutritionPer100g: {
+      energyKj: 380,
+      energyKcal: 90,
+      fat: 1.2,
+      saturatedFat: 0.2,
+      carbohydrates: 16,
+      sugars: 4.5,
+      protein: 3.2,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10816",
+    name: "Pico de Gallo",
+    slogan: "SALSA PARTY",
+    category: "vegetables",
+    imageUrl: getImageUrl("10816"),
+    nutritionPer100g: {
+      energyKj: 85,
+      energyKcal: 20,
+      fat: 0.2,
+      saturatedFat: 0,
+      carbohydrates: 3.5,
+      sugars: 2.8,
+      protein: 1.0,
+      salt: 0.5,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10791",
+    name: "Avokado",
+    slogan: "CREAMY GREEN DREAM",
+    category: "vegetables",
+    imageUrl: getImageUrl("10791"),
+    nutritionPer100g: {
+      energyKj: 817,
+      energyKcal: 199,
+      fat: 20,
+      saturatedFat: 2.2,
+      carbohydrates: 1.9,
+      sugars: 1.8,
+      protein: 1.9,
+      salt: 0.2,
+    },
+    nutriScore: "A",
+    climateFoodprint: 3.6,
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "11078",
+    name: "Skivad Rödlök",
+    slogan: "ONION RINGS",
+    category: "vegetables",
+    imageUrl: getImageUrl("11078"),
+    nutritionPer100g: {
+      energyKj: 165,
+      energyKcal: 39,
+      fat: 0.1,
+      saturatedFat: 0,
+      carbohydrates: 7.5,
+      sugars: 5.5,
+      protein: 1.2,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10838",
+    name: "Marinerade Sojabönor",
+    slogan: "BEAN THERE",
+    category: "vegetables",
+    imageUrl: getImageUrl("10838"),
+    nutritionPer100g: {
+      energyKj: 520,
+      energyKcal: 124,
+      fat: 5.5,
+      saturatedFat: 0.8,
+      carbohydrates: 8.0,
+      sugars: 2.5,
+      protein: 11,
+      salt: 0.8,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+
+  // ===== CHEESE =====
+  {
+    id: "10699",
+    name: "Tärnad Gouda",
+    slogan: "AS GOUDA AS IT GETS",
+    category: "cheese",
+    imageUrl: getImageUrl("10699"),
+    nutritionPer100g: {
+      energyKj: 1446,
+      energyKcal: 348,
+      fat: 28,
+      saturatedFat: 18,
+      carbohydrates: 0.1,
+      sugars: 0.1,
+      protein: 24,
+      salt: 1.7,
+    },
+    nutriScore: "D",
+    climateFoodprint: 6.2,
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "10839",
+    name: "Mozzarellaost",
+    slogan: "MOZZA MAGIC",
+    category: "cheese",
+    imageUrl: getImageUrl("10839"),
+    nutritionPer100g: {
+      energyKj: 1100,
+      energyKcal: 264,
+      fat: 20,
+      saturatedFat: 12,
+      carbohydrates: 1.5,
+      sugars: 1.0,
+      protein: 20,
+      salt: 0.6,
+    },
+    nutriScore: "C",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: true,
+  },
+  {
+    id: "10704",
+    name: "Krämig Salladsost",
+    slogan: "CREAMY DREAMY",
+    category: "cheese",
+    imageUrl: getImageUrl("10704"),
+    nutritionPer100g: {
+      energyKj: 1050,
+      energyKcal: 252,
+      fat: 22,
+      saturatedFat: 15,
+      carbohydrates: 2.5,
+      sugars: 2.0,
+      protein: 12,
+      salt: 1.5,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12973",
+    name: "Cottage Cheese",
+    slogan: "CLOUD CRUMBLES",
+    category: "cheese",
+    imageUrl: getImageUrl("12973"),
+    nutritionPer100g: {
+      energyKj: 420,
+      energyKcal: 100,
+      fat: 4.3,
+      saturatedFat: 2.8,
+      carbohydrates: 2.5,
+      sugars: 2.5,
+      protein: 12,
+      salt: 0.5,
+    },
+    nutriScore: "A",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+
+  // ===== FRUITS =====
+  {
+    id: "10711",
+    name: "Mangobitar",
+    slogan: "MANGO TANGO",
+    category: "fruits",
+    imageUrl: getImageUrl("10711"),
+    nutritionPer100g: {
+      energyKj: 250,
+      energyKcal: 59,
+      fat: 0.3,
+      saturatedFat: 0.1,
+      carbohydrates: 13,
+      sugars: 12,
+      protein: 0.8,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "13227",
+    name: "Vattenmelon",
+    slogan: "CARRY THE WATER",
+    category: "fruits",
+    imageUrl: getImageUrl("13227"),
+    nutritionPer100g: {
+      energyKj: 125,
+      energyKcal: 30,
+      fat: 0.1,
+      saturatedFat: 0,
+      carbohydrates: 6.5,
+      sugars: 6.0,
+      protein: 0.6,
+      salt: 0.01,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+
+  // ===== TOPPINGS =====
+  {
+    id: "11647",
+    name: "Salladschips",
+    slogan: "CHIP CHIP HOORAY",
+    category: "toppings",
+    imageUrl: getImageUrl("11647"),
+    nutritionPer100g: {
+      energyKj: 1850,
+      energyKcal: 442,
+      fat: 18,
+      saturatedFat: 2.5,
+      carbohydrates: 60,
+      sugars: 3.0,
+      protein: 8.0,
+      salt: 1.5,
+    },
+    nutriScore: "C",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "13115",
+    name: "Krutong Naturell",
+    slogan: "CROUTON HEAVEN",
+    category: "toppings",
+    imageUrl: getImageUrl("13115"),
+    nutritionPer100g: {
+      energyKj: 1680,
+      energyKcal: 400,
+      fat: 12,
+      saturatedFat: 1.5,
+      carbohydrates: 62,
+      sugars: 4.0,
+      protein: 10,
+      salt: 1.2,
+    },
+    nutriScore: "C",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "11643",
+    name: "Topping Gojibär",
+    slogan: "SUPER BERRY",
+    category: "toppings",
+    imageUrl: getImageUrl("11643"),
+    nutritionPer100g: {
+      energyKj: 1420,
+      energyKcal: 339,
+      fat: 2.0,
+      saturatedFat: 0.3,
+      carbohydrates: 62,
+      sugars: 48,
+      protein: 14,
+      salt: 0.5,
+    },
+    nutriScore: "C",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "11141",
+    name: "Örtmarinerade Oliver",
+    slogan: "OLIVE YOU",
+    category: "toppings",
+    imageUrl: getImageUrl("11141"),
+    nutritionPer100g: {
+      energyKj: 580,
+      energyKcal: 139,
+      fat: 14,
+      saturatedFat: 2.0,
+      carbohydrates: 1.5,
+      sugars: 0.5,
+      protein: 1.0,
+      salt: 2.8,
+    },
+    nutriScore: "C",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "10805",
+    name: "Cornichons",
+    slogan: "TINY PICKLES",
+    category: "toppings",
+    imageUrl: getImageUrl("10805"),
+    nutritionPer100g: {
+      energyKj: 65,
+      energyKcal: 16,
+      fat: 0.2,
+      saturatedFat: 0,
+      carbohydrates: 2.0,
+      sugars: 1.5,
+      protein: 0.8,
+      salt: 2.5,
+    },
+    nutriScore: "A",
+    isVegan: true,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+
+  // ===== DRESSINGS =====
+  {
+    id: "12715",
+    name: "Rhode Island Dressing",
+    slogan: "CLASSIC CREAMY",
+    category: "dressings",
+    imageUrl: getImageUrl("12715"),
+    nutritionPer100g: {
+      energyKj: 1680,
+      energyKcal: 405,
+      fat: 42,
+      saturatedFat: 3.5,
+      carbohydrates: 6.0,
+      sugars: 5.0,
+      protein: 1.0,
+      salt: 1.2,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12714",
+    name: "Vitlöksdressing",
+    slogan: "GARLIC GOODNESS",
+    category: "dressings",
+    imageUrl: getImageUrl("12714"),
+    nutritionPer100g: {
+      energyKj: 1550,
+      energyKcal: 374,
+      fat: 38,
+      saturatedFat: 3.0,
+      carbohydrates: 5.5,
+      sugars: 4.0,
+      protein: 1.2,
+      salt: 1.4,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12716",
+    name: "Sriracha Mayo",
+    slogan: "SPICY CREAMY",
+    category: "dressings",
+    imageUrl: getImageUrl("12716"),
+    nutritionPer100g: {
+      energyKj: 1720,
+      energyKcal: 415,
+      fat: 43,
+      saturatedFat: 3.5,
+      carbohydrates: 5.0,
+      sugars: 3.5,
+      protein: 1.0,
+      salt: 1.8,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12713",
+    name: "Mangocurrydressing",
+    slogan: "TROPICAL TWIST",
+    category: "dressings",
+    imageUrl: getImageUrl("12713"),
+    nutritionPer100g: {
+      energyKj: 1380,
+      energyKcal: 332,
+      fat: 32,
+      saturatedFat: 2.5,
+      carbohydrates: 10,
+      sugars: 8.5,
+      protein: 0.8,
+      salt: 1.0,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "12502",
+    name: "Tzatziki",
+    slogan: "GREEK CLASSIC",
+    category: "dressings",
+    imageUrl: getImageUrl("12502"),
+    nutritionPer100g: {
+      energyKj: 520,
+      energyKcal: 125,
+      fat: 11,
+      saturatedFat: 2.5,
+      carbohydrates: 3.5,
+      sugars: 2.8,
+      protein: 3.2,
+      salt: 0.8,
+    },
+    nutriScore: "C",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+  {
+    id: "13218",
+    name: "Jalapeño Ranch Dressing",
+    slogan: "SPICY RANCH",
+    category: "dressings",
+    imageUrl: getImageUrl("13218"),
+    nutritionPer100g: {
+      energyKj: 1480,
+      energyKcal: 356,
+      fat: 36,
+      saturatedFat: 3.0,
+      carbohydrates: 5.0,
+      sugars: 3.5,
+      protein: 1.5,
+      salt: 1.5,
+    },
+    nutriScore: "D",
+    isVegan: false,
+    isVegetarian: true,
+    isWarmish: false,
+  },
+];
+
+import type { IngredientCategory } from "@/types";
+
+export const getIngredientsByCategory = (category: IngredientCategory) =>
+  ingredients.filter((i) => i.category === category);
+
+export const getIngredientById = (id: string) =>
+  ingredients.find((i) => i.id === id);
